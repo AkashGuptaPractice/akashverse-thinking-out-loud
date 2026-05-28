@@ -35,3 +35,4 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 A real server is required — `fetch()` for `posts/index.json` won't work over `file://`.
+
