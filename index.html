@@ -25,6 +25,13 @@
 </head>
 <body>
   <header class="hero">
+    <div class="scene-3d" aria-hidden="true">
+      <div class="grid-floor"></div>
+      <span class="shape3d cube"></span>
+      <span class="shape3d ring"></span>
+      <span class="shape3d dots"></span>
+      <span class="shape3d bar"></span>
+    </div>
     <nav class="nav">
       <a href="#about">About</a>
       <a href="#journey">Journey</a>
@@ -69,15 +76,25 @@
     <section id="about" class="section">
       <h2 data-num="01">About</h2>
       <p>
-        I'm a Software Engineer at <strong>Pegasystems</strong>, working on the Pega Platform
-        Security and Launchpad ecosystem — Unified Authentication Service, API Gateway,
-        authorization, and operator management. Previously interned at Pega, VyasAI, and
-        Afame Technologies.
+        I think the best engineers are the ones who keep asking <em>why</em> until the answer
+        feels boring — and then ask once more. That's mostly what I'm doing here.
       </p>
       <p>
-        I enjoy going deep on systems — auth flows, security hardening, and the small
-        details that make distributed systems boring (in a good way). This site is where
-        I keep notes on things I'm learning. Some are quick takes, some are deep-dives.
+        Day-to-day, I work on the platform-security layer at <strong>Pegasystems</strong> —
+        the unglamorous-but-essential plumbing of authentication, API gateways, and
+        authorization. I love it because security is where small details compound into
+        large consequences: a wrong default, a missed claim, a stale token, and weeks of
+        cleanup. Getting it right means a system that almost no one notices, which is
+        exactly the point.
+      </p>
+      <p>
+        The longer I do this, the more curious I get about the <em>next</em> layer:
+        how the same care that makes auth systems trustworthy translates to AI systems.
+        How do we know a model is doing what we think it's doing? What does "secure"
+        even mean when the inputs and outputs are continuous? Lately I've been working
+        through the math behind embeddings and retrieval — partly because RAG is
+        everywhere now, mostly because I want to understand it from first principles.
+        This site is where I write that thinking down.
       </p>
     </section>
 
@@ -100,7 +117,7 @@
         <li>
           <span class="when">2023 — 2025</span>
           <h3>M.Tech, Computer Science · IIT Bombay</h3>
-          <p>CGPA 8.47. PG Academic Secretary, Placement Coordinator, TA for DSA and Python.</p>
+          <p>CGPA 8.47. Beyond coursework I served as PG Academic Secretary — the elected voice for the postgrad cohort on academic matters — a Placement Coordinator helping classmates land roles, and a TA for Data Structures &amp; Algorithms and Python. The teaching is what stuck most: you don't really understand something until a first-year asks the obvious question and you realise you don't.</p>
         </li>
         <li>
           <span class="when">Jan 2024 — Jun 2024</span>
@@ -117,7 +134,7 @@
 
     <section id="learnings" class="section">
       <h2 data-num="03">Learnings</h2>
-      <p class="muted">Notes, deep-dives and experiments. Each one is shareable — copy the link.</p>
+      <p class="muted">A working log. Some are quick takes; others are deep-dives I needed to write to actually understand. Every link is shareable — copy and pass it on.</p>
       <div id="post-list" class="posts">
         <p class="muted">Loading…</p>
       </div>
