@@ -1,0 +1,16 @@
+[
+  {
+    "title": "Building Vector Embeddings From Scratch",
+    "file": "vector-embeddings-from-scratch.html",
+    "date": "2026-05-28",
+    "summary": "A chapter-by-chapter, math-first walkthrough of how vector embeddings are built — every equation shown, using 'machine learning' as the worked example.",
+    "tags": ["ML", "Embeddings", "Deep Dive"]
+  },
+  {
+    "title": "Vector Embeddings Explained: A Visual Guide to RAG & Search",
+    "file": "vector-embeddings-visual-guide.html",
+    "date": "2026-05-28",
+    "summary": "From raw text to numbers — the visual, intuition-first companion to the deep-dive. The engine behind RAG, semantic search, and AI retrieval.",
+    "tags": ["ML", "Embeddings", "RAG"]
+  }
+]

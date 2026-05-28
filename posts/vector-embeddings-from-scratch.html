@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building Vector Embeddings From Scratch — Akash Gupta</title>
+<meta name="description" content="A chapter-by-chapter, math-first walkthrough of how vector embeddings are built, using 'machine learning' as the worked example.">
+<meta name="author" content="Akash Gupta">
+<meta property="og:title" content="Building Vector Embeddings From Scratch">
+<meta property="og:description" content="A chapter-by-chapter, math-first walkthrough of how vector embeddings are built — every equation shown.">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;800&family=Fraunces:ital,wght@0,300;0,700;0,900;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f3ee;
+  --ink: #1a1209;
+  --paper: #fdfaf5;
+  --ruled: #e8e0d0;
+  --accent: #c0392b;
+  --blue: #1a4a8a;
+  --green: #1a6b3c;
+  --orange: #d35400;
+  --purple: #6c3483;
+  --muted: #7a6e60;
+  --highlight: #fff3b0;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+/* ── NOTEBOOK TEXTURE ── */
+body::before {
+  content:'';
+  position: fixed;
+  inset:0;
+  background-image: repeating-linear-gradient(
+    transparent, transparent 31px,
+    var(--ruled) 31px, var(--ruled) 32px
+  );
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── LAYOUT ── */
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 60px 40px;
+  position: relative;
+  z-index:1;
+}
+
+/* ── HEADER ── */
+.book-header {
+  border-bottom: 3px double var(--ink);
+  padding-bottom: 24px;
+  margin-bottom: 50px;
+  text-align: center;
+}
+.book-header .kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.book-header h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+.book-header h1 em { font-style: italic; color: var(--accent); }
+.book-header .subtitle {
+  margin-top: 12px;
+  color: var(--muted);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 1.05rem;
+}
+
+/* ── CHAPTER HEADING ── */
+.chapter {
+  margin: 56px 0 20px;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.ch-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+  border: 1.5px solid var(--accent);
+  padding: 2px 8px;
+  border-radius: 3px;
+  flex-shrink:0;
+}
+.ch-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  border-bottom: 1.5px solid var(--ink);
+  flex:1;
+  padding-bottom: 4px;
+}
+
+/* ── BODY TEXT ── */
+.prose {
+  font-size: 1rem;
+  font-weight: 300;
+  color: #2d2416;
+  margin-bottom: 20px;
+}
+.prose strong { font-weight: 700; color: var(--ink); }
+.prose em { color: var(--blue); font-style: italic; }
+.prose code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  background: rgba(26,74,138,0.08);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--blue);
+}
+
+/* ── MATH BLOCK ── */
+.math-block {
+  background: var(--paper);
+  border-left: 4px solid var(--blue);
+  padding: 20px 24px;
+  margin: 20px 0;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.06);
+  overflow-x: auto;
+}
+.math-block .math-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--blue);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.math-expr {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  color: var(--ink);
+  line-height: 2;
+}
+.math-expr .var { color: var(--blue); font-weight: 600; }
+.math-expr .num { color: var(--accent); }
+.math-expr .op  { color: var(--orange); }
+.math-expr .res { color: var(--green); font-weight: 800; }
+.math-expr .comment {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 300;
+  margin-left: 8px;
+}
+
+/* ── VOCAB TABLE ── */
+.vocab-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 0.9rem;
+}
+.vocab-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--ink);
+  color: var(--bg);
+}
+.vocab-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--ruled);
+  vertical-align: top;
+}
+.vocab-table tr:nth-child(even) td { background: rgba(0,0,0,0.025); }
+.vocab-table .idx {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 800;
+}
+.vocab-table .word { font-weight: 700; }
+.vocab-table .vec  {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--blue);
+}
+
+/* ── ONE-HOT GRID ── */
+.onehot-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  align-items: flex-end;
+}
+.oh-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.oh-cell {
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--ruled);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+.oh-cell.hot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  box-shadow: 0 4px 12px rgba(192,57,43,0.3);
+}
+.oh-cell.cold {
+  background: var(--paper);
+  color: var(--muted);
+}
+.oh-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 4px;
+  max-width: 38px;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+/* ── WEIGHT MATRIX ── */
+.matrix-container {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+.matrix {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--paper);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--ruled);
+  position: relative;
+}
+.matrix::before, .matrix::after {
+  content: '';
+  position: absolute;
+  top: 6px; bottom: 6px;
+  width: 4px;
+  border: 2px solid var(--ink);
+}
+.matrix::before { left: 4px; border-right: none; border-radius: 3px 0 0 3px; }
+.matrix::after  { right: 4px; border-left: none; border-radius: 0 3px 3px 0; }
+.matrix-row { display: flex; gap: 3px; }
+.matrix-cell {
+  width: 50px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  border-radius: 3px;
+  font-weight: 600;
+  transition: background 0.4s;
+}
+.matrix-cell.pos { background: rgba(26,107,60,0.12); color: var(--green); }
+.matrix-cell.neg { background: rgba(192,57,43,0.10); color: var(--accent); }
+.matrix-cell.zero{ background: rgba(0,0,0,0.04); color: var(--muted); }
+.matrix-cell.active { background: var(--highlight) !important; color: var(--ink) !important; outline: 2px solid var(--orange); }
+
+/* ── MATMUL DISPLAY ── */
+.matmul-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.matmul-symbol {
+  font-size: 1.8rem;
+  color: var(--orange);
+  font-family: 'JetBrains Mono', monospace;
+}
+.vector-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--paper);
+  padding: 12px 8px;
+  border-radius: 8px;
+  border: 1.5px solid var(--ruled);
+  position: relative;
+  min-width: 70px;
+}
+.vector-col::before, .vector-col::after {
+  content: '';
+  position: absolute;
+  top: 6px; bottom: 6px;
+  width: 4px;
+  border: 2px solid var(--ink);
+}
+.vector-col::before { left: 2px; border-right: none; border-radius: 3px 0 0 3px; }
+.vector-col::after  { right: 2px; border-left: none; border-radius: 0 3px 3px 0; }
+.vec-cell {
+  height: 32px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 3px;
+}
+.vec-cell.input  { background: rgba(192,57,43,0.1); color: var(--accent); }
+.vec-cell.result { background: rgba(26,107,60,0.12); color: var(--green); }
+.vec-cell.hot-v  { background: var(--accent); color: white; }
+.vec-cell.cold-v { background: rgba(0,0,0,0.04); color: var(--muted); }
+
+/* ── STEP COMPUTATION ── */
+.step-compute {
+  background: var(--paper);
+  border: 1.5px solid var(--ruled);
+  border-radius: 10px;
+  padding: 22px 26px;
+  margin: 18px 0;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.07);
+}
+.step-compute .sc-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--orange);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--ruled);
+}
+.dot-product-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 6px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+}
+.dp-w { color: var(--blue); font-weight: 700; }
+.dp-x { color: var(--accent); font-weight: 700; }
+.dp-mul { color: var(--orange); }
+.dp-eq  { color: var(--ink); font-weight: 700; }
+.dp-res { color: var(--green); font-weight: 800; }
+
+/* ── RELU VISUAL ── */
+.relu-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  align-items: flex-end;
+}
+.relu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.relu-before {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.relu-arrow { font-size: 0.8rem; color: var(--orange); }
+.relu-after {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 5px;
+}
+.relu-after.kept { background: rgba(26,107,60,0.12); color: var(--green); }
+.relu-after.zero { background: rgba(0,0,0,0.06); color: var(--muted); }
+
+/* ── COSINE SIM ── */
+.cosine-demo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+@media (max-width: 600px) { .cosine-demo { grid-template-columns: 1fr; } }
+.cos-card {
+  background: var(--paper);
+  border: 1.5px solid var(--ruled);
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.05);
+}
+.cos-card h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cos-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+}
+.badge-sim  { background: rgba(26,107,60,0.15); color: var(--green); }
+.badge-diff { background: rgba(192,57,43,0.12); color: var(--accent); }
+.cos-vecs {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--blue);
+  margin-bottom: 10px;
+  line-height: 1.8;
+}
+.cos-result {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-align: center;
+  padding: 8px;
+  border-radius: 6px;
+}
+.cos-result.high { background: rgba(26,107,60,0.12); color: var(--green); }
+.cos-result.low  { background: rgba(192,57,43,0.1); color: var(--accent); }
+
+/* ── INTERACTIVE SLIDER SECTION ── */
+.interactive-box {
+  background: var(--highlight);
+  border: 2px solid var(--orange);
+  border-radius: 10px;
+  padding: 24px;
+  margin: 24px 0;
+}
+.interactive-box h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--orange);
+  margin-bottom: 14px;
+}
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+.slider-row label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--ink);
+  min-width: 80px;
+}
+input[type=range] {
+  -webkit-appearance: none;
+  height: 5px;
+  background: var(--ruled);
+  border-radius: 3px;
+  flex: 1;
+  min-width: 120px;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--orange);
+  cursor: pointer;
+}
+.slider-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--orange);
+  min-width: 50px;
+}
+#cosine-output {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-align: center;
+  padding: 14px;
+  border-radius: 8px;
+  margin-top: 16px;
+  transition: background 0.3s;
+}
+
+/* ── 2D VECTOR CANVAS ── */
+.canvas-wrap {
+  background: var(--paper);
+  border: 1.5px solid var(--ruled);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 20px 0;
+  text-align: center;
+}
+canvas {
+  max-width: 100%;
+  border-radius: 6px;
+}
+
+/* ── TRAINING SECTION ── */
+.training-step {
+  display: flex;
+  gap: 16px;
+  margin: 16px 0;
+  align-items: flex-start;
+}
+.ts-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.ts-body h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+.ts-body p  { font-size: 0.88rem; color: var(--muted); font-weight: 300; }
+
+/* ── CALLOUT ── */
+.callout {
+  display: flex;
+  gap: 14px;
+  background: var(--paper);
+  border: 1.5px solid var(--green);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 20px 0;
+}
+.callout-icon { font-size: 1.4rem; flex-shrink: 0; }
+.callout-text { font-size: 0.88rem; font-weight: 300; color: #2d2416; }
+.callout-text strong { font-weight: 700; color: var(--green); }
+
+/* ── SEPARATOR ── */
+.sep {
+  text-align: center;
+  margin: 48px 0 0;
+  color: var(--muted);
+  font-size: 1.2rem;
+  letter-spacing: 0.5em;
+}
+
+/* ANIMATE IN */
+@keyframes fadein { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+.chapter, .math-block, .step-compute, .vocab-table { animation: fadein 0.5s ease both; }
+</style>
+</head>
+<body>
+<a href="../index.html" style="position:fixed;top:16px;left:16px;z-index:1000;font-family:'JetBrains Mono',monospace;font-size:11px;text-decoration:none;color:#1a1209;background:#fdfaf5;border:1.5px solid #1a1209;padding:6px 10px;border-radius:4px;letter-spacing:0.05em;">← akashgupta.dev</a>
+<div class="page">
+
+<!-- ══ HEADER ══ -->
+<div class="book-header">
+  <div class="kicker">Deep Technical Dive · Chapter by Chapter</div>
+  <h1>Building <em>Vector Embeddings</em><br>From Scratch</h1>
+  <p class="subtitle">Using the phrase <strong>"machine learning"</strong> as our worked example — every equation shown</p>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 1: VOCABULARY & ONE-HOT
+════════════════════════════════════════════ -->
+<div class="chapter">
+  <span class="ch-num">CH 01</span>
+  <span class="ch-title">Step 1 — Build a Vocabulary</span>
+</div>
+
+<p class="prose">
+  Before any math happens, we need a <strong>vocabulary</strong> — a fixed list of every word the model knows.
+  Each word gets a unique integer index. Let's say our tiny toy vocabulary has just 8 words:
+</p>
+
+<table class="vocab-table">
+  <thead><tr><th>Index</th><th>Word</th><th>What it means (simplified)</th></tr></thead>
+  <tbody>
+    <tr><td class="idx">0</td><td class="word">machine</td><td>a mechanical or computing device</td></tr>
+    <tr><td class="idx">1</td><td class="word">learning</td><td>acquiring knowledge or skill</td></tr>
+    <tr><td class="idx">2</td><td class="word">deep</td><td>extending far down</td></tr>
+    <tr><td class="idx">3</td><td class="word">neural</td><td>relating to nerves / neurons</td></tr>
+    <tr><td class="idx">4</td><td class="word">data</td><td>facts and statistics</td></tr>
+    <tr><td class="idx">5</td><td class="word">model</td><td>a mathematical representation</td></tr>
+    <tr><td class="idx">6</td><td class="word">train</td><td>to teach a system using examples</td></tr>
+    <tr><td class="idx">7</td><td class="word">vector</td><td>a list of numbers</td></tr>
+  </tbody>
+</table>
+
+<p class="prose">
+  Vocab size <code>V = 8</code>. In real life (e.g. BERT), <code>V = 30,522</code> words. The math is identical — just bigger.
+</p>
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 2: ONE-HOT ENCODING
+════════════════════════════════════════════ -->
+<div class="chapter">
+  <span class="ch-num">CH 02</span>
+  <span class="ch-title">Step 2 — One-Hot Encoding</span>
+</div>
+
+<p class="prose">
+  Computers can't process the string <code>"machine"</code>. We first convert every word into a <strong>one-hot vector</strong>:
+  a list of zeros with a single <code>1</code> in the position matching the word's index.
+</p>
+
+<div class="math-block">
+  <div class="math-label">Definition — One-Hot Vector</div>
+  <div class="math-expr">
+    <span class="var">x</span> = one_hot(<span class="var">i</span>) = vector of length <span class="num">V</span>,<br>
+    where <span class="var">x</span>[<span class="var">j</span>] = <span class="num">1</span> <span class="op">if</span> j == i, else <span class="num">0</span>
+  </div>
+</div>
+
+<p class="prose">For our word <strong>"machine"</strong> (index 0) and <strong>"learning"</strong> (index 1):</p>
+
+<p class="prose" style="margin-bottom:10px">→ <strong>machine</strong> (index 0):</p>
+<div class="onehot-grid" id="oh-machine"></div>
+
+<p class="prose" style="margin-top:18px; margin-bottom:10px">→ <strong>learning</strong> (index 1):</p>
+<div class="onehot-grid" id="oh-learning"></div>
+
+<div class="callout">
+  <span class="callout-icon">⚠️</span>
+  <span class="callout-text">
+    <strong>Problem with one-hot:</strong> "machine" and "learning" look completely unrelated — their dot product is 0!
+    The vectors tell us nothing about meaning. That's why we need embeddings.
+  </span>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 3: THE EMBEDDING LOOKUP TABLE
+════════════════════════════════════════════ -->
+<div class="chapter">
+  <span class="ch-num">CH 03</span>
+  <span class="ch-title">Step 3 — The Embedding Matrix W</span>
+</div>
+
+<p class="prose">
+  The embedding model keeps a giant matrix <strong>W</strong> (called the <em>embedding table</em>).
+  Its shape is <code>V × D</code> where <code>V</code> = vocab size and <code>D</code> = embedding dimension.
+</p>
+<p class="prose">
+  In our toy example: <code>V=8, D=4</code>. In real BERT: <code>V=30522, D=768</code>.
+  Every row in W is the embedding for one word.
+</p>
+
+<div class="math-block">
+  <div class="math-label">Shape of Embedding Matrix</div>
+  <div class="math-expr">
+    <span class="var">W</span> ∈ ℝ^(<span class="num">V</span> <span class="op">×</span> <span class="num">D</span>)  =  ℝ^(<span class="num">8</span> <span class="op">×</span> <span class="num">4</span>)<br><br>
+    Each row <span class="var">W</span>[<span class="var">i</span>] = embedding vector for word <span class="var">i</span><br>
+    These values start <em>random</em>, then improve during training.
+  </div>
+</div>
+
+<p class="prose">Here is our toy W matrix (randomly initialized values):</p>
+
+<div class="matrix-container">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:6px;letter-spacing:0.1em;">
+    W (8×4 matrix) — rows = words, cols = embedding dimensions
+  </div>
+  <div class="matrix" id="weight-matrix"></div>
+</div>
+
+<p class="prose" style="margin-top:16px">
+  Now to get the embedding for <strong>"machine"</strong>, we multiply the one-hot vector by W.
+  But since the one-hot has a single 1 at index 0, this is literally just <strong>picking row 0</strong>:
+</p>
+
+<div class="math-block">
+  <div class="math-label">Embedding Lookup = Matrix Multiply</div>
+  <div class="math-expr">
+    <span class="var">e</span> = <span class="var">x</span> · <span class="var">W</span><br><br>
+    <span class="comment">// x is shape (1×8) one-hot, W is shape (8×4)</span><br>
+    <span class="comment">// result e is shape (1×4) — the embedding!</span><br><br>
+    <span class="var">e</span><sub>machine</sub> = [<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>] · <span class="var">W</span> = row<span class="num">0</span> of <span class="var">W</span>
+  </div>
+</div>
+
+<div class="matmul-wrap" id="matmul-demo">
+  <!-- filled by JS -->
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 4: DOT PRODUCT COMPUTATION
+════════════════════════════════════════════ -->
+<div class="chapter">
+  <span class="ch-num">CH 04</span>
+  <span class="ch-title">Step 4 — The Dot Product in Detail</span>
+</div>
+
+<p class="prose">
+  Let's compute the actual dot product step by step. The embedding for <strong>"machine"</strong>
+  is row 0 of W. Each output dimension <code>d</code> is:
+</p>
+
+<div class="math-block">
+  <div class="math-label">General Formula</div>
+  <div class="math-expr">
+    <span class="var">e</span>[<span class="var">d</span>] = Σ<sub>j=0</sub><sup>V-1</sup> <span class="var">x</span>[<span class="var">j</span>] · <span class="var">W</span>[<span class="var">j</span>,<span class="var">d</span>]<br><br>
+    <span class="comment">// Since x is one-hot with 1 at index i, all terms zero out except j=i</span><br>
+    <span class="var">e</span>[<span class="var">d</span>] = <span class="num">1</span> · <span class="var">W</span>[<span class="var">i</span>,<span class="var">d</span>] = <span class="var">W</span>[<span class="var">i</span>,<span class="var">d</span>]
+  </div>
+</div>
+
+<div class="step-compute" id="dotprod-steps">
+  <div class="sc-title">🔢 Actual Computation — "machine" embedding dimension by dimension</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 5: RELU ACTIVATION
+════════════════════════════════════════════ -->
+<div class="chapter">
+  <span class="ch-num">CH 05</span>
+  <span class="ch-title">Step 5 — Activation Function (ReLU)</span>
+</div>
+
+<p class="prose">
+  In a deeper network, after each layer's dot products, we apply an <strong>activation function</strong>.
+  The simplest is <strong>ReLU</strong> (Rectified Linear Unit):
+</p>
+
+<div class="math-block">
+  <div class="math-label">ReLU Definition</div>
+  <div class="math-expr">
+    ReLU(<span class="var">z</span>) = max(<span class="num">0</span>, <span class="var">z</span>)<br><br>
+    <span class="comment">// Negative values → 0. Positive values → unchanged.</span><br>
+    <span class="comment">// This adds "non-linearity" — lets the network learn complex patterns</span>
+  </div>
+</div>
+
+<p class="prose">Applied to <strong>"machine"</strong>'s raw embedding <code>[0.52, -0.31, 0.18, -0.74]</code>:</p>
+
+<div class="relu-grid" id="relu-demo"></div>
+
+<div class="callout">
+  <span class="callout-icon">💡</span>
+  <span class="callout-text">
+    <strong>Why ReLU?</strong> Without activation functions, stacking layers does nothing — they collapse into one.
+    ReLU "switches neurons on/off," letting the model learn <em>which features matter</em> for a given input.
+  </span>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 6: COSINE SIMILARITY
+════════════════════════════════════════════ -->
+<div class="chapter">
+  <span class="ch-num">CH 06</span>
+  <span class="ch-title">Step 6 — Cosine Similarity: Measuring Meaning Distance</span>
+</div>
+
+<p class="prose">
+  Once we have two vectors, how do we measure how <em>similar</em> their meanings are?
+  We use <strong>cosine similarity</strong> — the cosine of the angle between the two vectors in high-dimensional space.
+</p>
+
+<div class="math-block">
+  <div class="math-label">Cosine Similarity Formula</div>
+  <div class="math-expr">
+    cos(θ) = <span class="var">A</span>·<span class="var">B</span> / (||<span class="var">A</span>|| × ||<span class="var">B</span>||)<br><br>
+    <span class="var">A</span>·<span class="var">B</span> = Σ <span class="var">A</span>[<span class="var">i</span>] × <span class="var">B</span>[<span class="var">i</span>]  <span class="comment">// dot product</span><br>
+    ||<span class="var">A</span>|| = √(Σ <span class="var">A</span>[<span class="var">i</span>]²)          <span class="comment">// magnitude / length</span><br><br>
+    Range: <span class="res">−1</span> (opposite) → <span class="num">0</span> (unrelated) → <span class="res">+1</span> (identical)
+  </div>
+</div>
+
+<p class="prose">
+  After training, let's say these are the learned embeddings (3D for clarity):
+</p>
+
+<div class="cosine-demo">
+  <div class="cos-card">
+    <h4>"machine" vs "learning" <span class="cos-badge badge-sim">SIMILAR</span></h4>
+    <div class="cos-vecs">
+      machine  = [0.8,  0.5, 0.3]<br>
+      learning = [0.7,  0.6, 0.2]
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--muted);margin-bottom:8px;line-height:1.9">
+      A·B = 0.8×0.7 + 0.5×0.6 + 0.3×0.2<br>
+          = 0.56 + 0.30 + 0.06 = <strong style="color:var(--ink)">0.92</strong><br>
+      ||A|| = √(0.64+0.25+0.09) = √0.98 ≈ <strong style="color:var(--ink)">0.99</strong><br>
+      ||B|| = √(0.49+0.36+0.04) = √0.89 ≈ <strong style="color:var(--ink)">0.94</strong>
+    </div>
+    <div class="cos-result high">cos(θ) = 0.92 / (0.99 × 0.94) ≈ 0.989 ✓</div>
+  </div>
+  <div class="cos-card">
+    <h4>"machine" vs "pizza" <span class="cos-badge badge-diff">DIFFERENT</span></h4>
+    <div class="cos-vecs">
+      machine = [0.8,  0.5,  0.3]<br>
+      pizza   = [-0.1, 0.9, -0.7]
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--muted);margin-bottom:8px;line-height:1.9">
+      A·B = 0.8×(−0.1) + 0.5×0.9 + 0.3×(−0.7)<br>
+          = −0.08 + 0.45 − 0.21 = <strong style="color:var(--ink)">0.16</strong><br>
+      ||A|| ≈ <strong style="color:var(--ink)">0.99</strong><br>
+      ||B|| = √(0.01+0.81+0.49) = √1.31 ≈ <strong style="color:var(--ink)">1.14</strong>
+    </div>
+    <div class="cos-result low">cos(θ) = 0.16 / (0.99 × 1.14) ≈ 0.142 ✗</div>
+  </div>
+</div>
+
+<!-- INTERACTIVE COSINE -->
+<div class="interactive-box">
+  <h3>🎛️ Interactive: Adjust vectors, watch cosine similarity change</h3>
+  <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;font-family:'JetBrains Mono',monospace">
+    Drag sliders to change vector components. Watch the similarity score update live.
+  </p>
+  <div class="slider-row">
+    <label>A = [<span id="a1v">0.8</span>,</label>
+    <input type="range" min="-1" max="1" step="0.1" value="0.8" id="sl_a1">
+    <span class="slider-val" id="sv_a1">0.8</span>
+  </div>
+  <div class="slider-row">
+    <label>B = [<span id="b1v">0.7</span>,</label>
+    <input type="range" min="-1" max="1" step="0.1" value="0.7" id="sl_b1">
+    <span class="slider-val" id="sv_b1">0.7</span>
+  </div>
+  <div class="slider-row">
+    <label>A[1] =</label>
+    <input type="range" min="-1" max="1" step="0.1" value="0.5" id="sl_a2">
+    <span class="slider-val" id="sv_a2">0.5</span>
+  </div>
+  <div class="slider-row">
+    <label>B[1] =</label>
+    <input type="range" min="-1" max="1" step="0.1" value="0.6" id="sl_b2">
+    <span class="slider-val" id="sv_b2">0.6</span>
+  </div>
+  <div id="cosine-output">Similarity: 0.99</div>
+  <canvas id="vec-canvas" width="400" height="200" style="margin-top:14px;background:#fffef8;border-radius:8px;border:1px solid var(--ruled);max-width:100%"></canvas>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 7: HOW TRAINING WORKS
+════════════════════════════════════════════ -->
+<div class="chapter">
+  <span class="ch-num">CH 07</span>
+  <span class="ch-title">Step 7 — How the Model Actually Learns (Training)</span>
+</div>
+
+<p class="prose">
+  The matrix W starts with random numbers. Training <em>updates</em> W so that similar words land near each other.
+  Here's the exact process, step by step:
+</p>
+
+<div class="training-step">
+  <div class="ts-num">1</div>
+  <div class="ts-body">
+    <h4>Feed a training pair</h4>
+    <p>Example: "machine" and "learning" appear together in text → they should be similar. Feed both words into the model.</p>
+  </div>
+</div>
+<div class="training-step">
+  <div class="ts-num">2</div>
+  <div class="ts-body">
+    <h4>Compute embeddings → cosine similarity</h4>
+    <p>Lookup both vectors from W. Compute cos(θ) between them. If they're random initially, cos(θ) ≈ some arbitrary value.</p>
+  </div>
+</div>
+<div class="training-step">
+  <div class="ts-num">3</div>
+  <div class="ts-body">
+    <h4>Compute the Loss</h4>
+    <p>We want cos(θ) = 1.0 (identical direction). The loss measures how far off we are:</p>
+  </div>
+</div>
+
+<div class="math-block">
+  <div class="math-label">Contrastive Loss (simplified)</div>
+  <div class="math-expr">
+    <span class="comment">// For a POSITIVE pair (words that should be similar):</span><br>
+    Loss = <span class="num">1</span> <span class="op">−</span> cos(<span class="var">e</span><sub>A</sub>, <span class="var">e</span><sub>B</sub>)<br><br>
+    <span class="comment">// If cos=0.3 (bad): Loss = 1 − 0.3 = 0.7  ← big penalty</span><br>
+    <span class="comment">// If cos=0.95 (good): Loss = 1 − 0.95 = 0.05  ← small penalty</span><br><br>
+    <span class="comment">// For a NEGATIVE pair (words that should differ):</span><br>
+    Loss = max(<span class="num">0</span>, cos(<span class="var">e</span><sub>A</sub>, <span class="var">e</span><sub>B</sub>) <span class="op">−</span> margin)
+  </div>
+</div>
+
+<div class="training-step">
+  <div class="ts-num">4</div>
+  <div class="ts-body">
+    <h4>Backpropagation — compute gradients</h4>
+    <p>Calculate ∂Loss/∂W — how much each number in W contributed to the error. Calculus chain rule is applied through every layer.</p>
+  </div>
+</div>
+
+<div class="math-block">
+  <div class="math-label">Gradient Descent Update Rule</div>
+  <div class="math-expr">
+    <span class="var">W</span> ← <span class="var">W</span> <span class="op">−</span> <span class="var">η</span> · ∂Loss/∂<span class="var">W</span><br><br>
+    <span class="var">η</span> = learning rate (e.g. <span class="num">0.001</span>)<br>
+    <span class="comment">// Tiny step in the direction that reduces loss</span><br><br>
+    Example: if W[0,2] = <span class="num">0.18</span>, gradient = <span class="num">0.4</span>, η = <span class="num">0.01</span>:<br>
+    W[0,2] ← <span class="num">0.18</span> <span class="op">−</span> <span class="num">0.01</span> × <span class="num">0.4</span> = <span class="res">0.176</span>
+  </div>
+</div>
+
+<div class="training-step">
+  <div class="ts-num">5</div>
+  <div class="ts-body">
+    <h4>Repeat billions of times</h4>
+    <p>Do this for billions of word pairs across all of Wikipedia, books, the web. After training, W's rows are the final embedding vectors — now rich with semantic meaning.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 8: FULL EXAMPLE RECAP
+════════════════════════════════════════════ -->
+<div class="chapter">
+  <span class="ch-num">CH 08</span>
+  <span class="ch-title">Full Worked Example — "machine learning"</span>
+</div>
+
+<p class="prose">
+  Let's trace the <strong>complete forward pass</strong> for the phrase "machine learning" end to end:
+</p>
+
+<div class="step-compute">
+  <div class="sc-title">Complete Forward Pass</div>
+  <div class="math-expr" style="font-size:0.82rem;line-height:2.2">
+    <span class="comment">// 1. Tokenize</span><br>
+    "machine learning" → tokens: [<span class="num">"machine"</span>, <span class="num">"learning"</span>]<br><br>
+    <span class="comment">// 2. Index lookup</span><br>
+    "machine"  → index <span class="num">0</span><br>
+    "learning" → index <span class="num">1</span><br><br>
+    <span class="comment">// 3. One-hot vectors (V=8)</span><br>
+    x_machine  = [<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>]<br>
+    x_learning = [<span class="num">0</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>]<br><br>
+    <span class="comment">// 4. Lookup in W (after training)</span><br>
+    e_machine  = W[<span class="num">0</span>] = [<span class="res">0.52</span>, <span class="res">−0.31</span>, <span class="res">0.18</span>, <span class="res">−0.74</span>]<br>
+    e_learning = W[<span class="num">1</span>] = [<span class="res">0.48</span>, <span class="res">−0.27</span>, <span class="res">0.22</span>, <span class="res">−0.69</span>]<br><br>
+    <span class="comment">// 5. Pool: mean of both vectors (for phrase embedding)</span><br>
+    e_phrase = (e_machine + e_learning) / 2<br>
+             = [<span class="res">0.50</span>, <span class="res">−0.29</span>, <span class="res">0.20</span>, <span class="res">−0.715</span>]<br><br>
+    <span class="comment">// 6. Cosine similarity vs "deep learning" ≈ 0.97 (SIMILAR ✓)</span><br>
+    <span class="comment">// 6. Cosine similarity vs "banana bread"  ≈ 0.03 (DIFFERENT ✓)</span>
+  </div>
+</div>
+
+
+<div class="sep">· · ·</div>
+
+<div style="text-align:center;padding:40px 0 60px;font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);letter-spacing:0.1em">
+  BUILT FOR YOU — FROM ONE-HOT TO COSINE SIMILARITY — EVERY STEP SHOWN
+</div>
+
+</div><!-- /page -->
+
+<script>
+// ── DATA ──
+const words = ['machine','learning','deep','neural','data','model','train','vector'];
+const W = [
+  [ 0.52, -0.31,  0.18, -0.74],
+  [ 0.48, -0.27,  0.22, -0.69],
+  [ 0.61,  0.14, -0.33,  0.55],
+  [ 0.58,  0.09, -0.28,  0.51],
+  [-0.22,  0.73,  0.41, -0.19],
+  [-0.18,  0.68,  0.38, -0.22],
+  [-0.35,  0.55,  0.29,  0.44],
+  [ 0.12, -0.88,  0.63,  0.07]
+];
+
+// ── ONE-HOT GRIDS ──
+function buildOneHot(containerId, hotIndex) {
+  const el = document.getElementById(containerId);
+  words.forEach((w, i) => {
+    const col = document.createElement('div');
+    col.className = 'oh-col';
+    const cell = document.createElement('div');
+    cell.className = 'oh-cell ' + (i === hotIndex ? 'hot' : 'cold');
+    cell.textContent = i === hotIndex ? '1' : '0';
+    const lbl = document.createElement('div');
+    lbl.className = 'oh-label';
+    lbl.textContent = w;
+    col.appendChild(cell);
+    col.appendChild(lbl);
+    el.appendChild(col);
+  });
+}
+buildOneHot('oh-machine', 0);
+buildOneHot('oh-learning', 1);
+
+// ── WEIGHT MATRIX ──
+(function() {
+  const m = document.getElementById('weight-matrix');
+  // header row
+  const hr = document.createElement('div');
+  hr.className = 'matrix-row';
+  ['', 'd0', 'd1', 'd2', 'd3'].forEach((t,i) => {
+    const c = document.createElement('div');
+    c.className = 'matrix-cell';
+    c.style.cssText = 'color:var(--muted);font-size:0.6rem;height:22px;';
+    c.textContent = t;
+    hr.appendChild(c);
+  });
+  m.appendChild(hr);
+
+  W.forEach((row, ri) => {
+    const r = document.createElement('div');
+    r.className = 'matrix-row';
+    // word label
+    const wc = document.createElement('div');
+    wc.className = 'matrix-cell';
+    wc.style.cssText = 'color:var(--muted);font-size:0.6rem;width:62px;';
+    wc.textContent = words[ri];
+    r.appendChild(wc);
+
+    row.forEach((val, ci) => {
+      const c = document.createElement('div');
+      c.className = 'matrix-cell ' + (ri === 0 ? 'active' : val > 0 ? 'pos' : val < -0.1 ? 'neg' : 'zero');
+      c.id = `w${ri}_${ci}`;
+      c.textContent = val.toFixed(2);
+      r.appendChild(c);
+    });
+    m.appendChild(r);
+  });
+})();
+
+// ── MATMUL DEMO ──
+(function() {
+  const wrap = document.getElementById('matmul-demo');
+
+  // one-hot vector
+  const vc = document.createElement('div');
+  vc.className = 'vector-col';
+  const vl = document.createElement('div');
+  vl.style.cssText = 'font-family:JetBrains Mono,monospace;font-size:0.6rem;color:var(--muted);text-align:center;margin-bottom:4px';
+  vl.textContent = 'x (one-hot)';
+  vc.appendChild(vl);
+  words.forEach((w, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'vec-cell ' + (i === 0 ? 'hot-v' : 'cold-v');
+    cell.textContent = i === 0 ? '1' : '0';
+    vc.appendChild(cell);
+  });
+  wrap.appendChild(vc);
+
+  const sym = document.createElement('div');
+  sym.className = 'matmul-symbol';
+  sym.textContent = '·';
+  wrap.appendChild(sym);
+
+  // mini W matrix indicator
+  const wbox = document.createElement('div');
+  wbox.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px';
+  const wl = document.createElement('div');
+  wl.style.cssText = 'font-family:JetBrains Mono,monospace;font-size:0.6rem;color:var(--muted);margin-bottom:4px';
+  wl.textContent = 'W (8×4)';
+  wbox.appendChild(wl);
+  const mini = document.createElement('div');
+  mini.style.cssText = 'display:grid;grid-template-columns:repeat(4,24px);gap:2px';
+  W.forEach((row, ri) => {
+    row.forEach((val, ci) => {
+      const c = document.createElement('div');
+      c.style.cssText = `width:24px;height:24px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:JetBrains Mono,monospace;font-size:0.45rem;font-weight:700;background:${ri===0?'var(--highlight)':val>0?'rgba(26,107,60,0.1)':'rgba(192,57,43,0.08)'};color:${ri===0?'var(--ink)':val>0?'var(--green)':'var(--accent)'}`;
+      c.textContent = val.toFixed(1);
+      mini.appendChild(c);
+    });
+  });
+  wbox.appendChild(mini);
+  wrap.appendChild(wbox);
+
+  const eq = document.createElement('div');
+  eq.className = 'matmul-symbol';
+  eq.textContent = '=';
+  wrap.appendChild(eq);
+
+  // result vector
+  const rv = document.createElement('div');
+  rv.className = 'vector-col';
+  const rl = document.createElement('div');
+  rl.style.cssText = 'font-family:JetBrains Mono,monospace;font-size:0.6rem;color:var(--muted);text-align:center;margin-bottom:4px';
+  rl.textContent = 'e_machine';
+  rv.appendChild(rl);
+  W[0].forEach(val => {
+    const c = document.createElement('div');
+    c.className = 'vec-cell result';
+    c.textContent = val.toFixed(2);
+    rv.appendChild(c);
+  });
+  wrap.appendChild(rv);
+})();
+
+// ── DOT PRODUCT STEPS ──
+(function() {
+  const box = document.getElementById('dotprod-steps');
+  const xhot = W[0]; // machine row
+  const dims = ['d0','d1','d2','d3'];
+  dims.forEach((d, di) => {
+    // For one-hot, only x[0]=1 contributes
+    const line = document.createElement('div');
+    line.className = 'dot-product-line';
+    line.innerHTML =
+      `<span style="color:var(--muted);font-size:0.7rem;min-width:30px">${d}:</span>` +
+      words.map((w, wi) => {
+        const x = wi === 0 ? 1 : 0;
+        const wv = W[wi][di].toFixed(2);
+        const active = wi === 0;
+        return `<span class="dp-x" style="${active?'':'opacity:0.25'}">${x}</span><span class="dp-mul">×</span><span class="dp-w" style="${active?'':'opacity:0.25'}">${wv}</span>`;
+      }).join('<span style="color:var(--muted);padding:0 2px">+</span>') +
+      `<span class="dp-eq"> = </span><span class="dp-res">${xhot[di].toFixed(2)}</span>` +
+      `<span style="color:var(--muted);font-size:0.68rem;margin-left:8px">(only index 0 survives)</span>`;
+    box.appendChild(line);
+  });
+})();
+
+// ── RELU ──
+(function() {
+  const raw = [0.52, -0.31, 0.18, -0.74];
+  const el = document.getElementById('relu-demo');
+  raw.forEach((v, i) => {
+    const item = document.createElement('div');
+    item.className = 'relu-item';
+    const b = document.createElement('div');
+    b.className = 'relu-before';
+    b.textContent = v.toFixed(2);
+    const ar = document.createElement('div');
+    ar.className = 'relu-arrow';
+    ar.textContent = '↓ ReLU';
+    const af = document.createElement('div');
+    af.className = 'relu-after ' + (v > 0 ? 'kept' : 'zero');
+    af.textContent = v > 0 ? v.toFixed(2) : '0.00';
+    item.appendChild(b);
+    item.appendChild(ar);
+    item.appendChild(af);
+    el.appendChild(item);
+  });
+})();
+
+// ── INTERACTIVE COSINE + CANVAS ──
+function getVals() {
+  return {
+    a1: parseFloat(document.getElementById('sl_a1').value),
+    a2: parseFloat(document.getElementById('sl_a2').value),
+    b1: parseFloat(document.getElementById('sl_b1').value),
+    b2: parseFloat(document.getElementById('sl_b2').value)
+  };
+}
+function computeCos(a1,a2,b1,b2) {
+  const dot = a1*b1 + a2*b2;
+  const ma = Math.sqrt(a1*a1 + a2*a2);
+  const mb = Math.sqrt(b1*b1 + b2*b2);
+  if (ma < 0.001 || mb < 0.001) return 0;
+  return dot / (ma * mb);
+}
+function drawVectors() {
+  const {a1,a2,b1,b2} = getVals();
+  const cos = computeCos(a1,a2,b1,b2);
+  const out = document.getElementById('cosine-output');
+  out.textContent = `Cosine Similarity = ${cos.toFixed(3)}`;
+  out.style.background = cos > 0.7 ? 'rgba(26,107,60,0.12)' : cos > 0.3 ? 'rgba(251,191,36,0.2)' : 'rgba(192,57,43,0.1)';
+  out.style.color = cos > 0.7 ? 'var(--green)' : cos > 0.3 ? 'var(--orange)' : 'var(--accent)';
+
+  const canvas = document.getElementById('vec-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const cx = W/2, cy = H/2, scale = 70;
+
+  // Grid
+  ctx.strokeStyle = '#e8e0d0';
+  ctx.lineWidth = 1;
+  for (let x=0; x<=W; x+=40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y=0; y<=H; y+=40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // Axes
+  ctx.strokeStyle = '#aaa';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(W,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,H); ctx.stroke();
+
+  function drawArrow(x,y,color,lbl) {
+    const ex = cx + x*scale, ey = cy - y*scale;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(ex,ey);
+    ctx.stroke();
+    // arrowhead
+    const angle = Math.atan2(-(ey-cy), ex-cx);
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex - 10*Math.cos(angle-0.35), ey + 10*Math.sin(angle-0.35));
+    ctx.lineTo(ex - 10*Math.cos(angle+0.35), ey + 10*Math.sin(angle+0.35));
+    ctx.closePath();
+    ctx.fill();
+    ctx.font = 'bold 12px JetBrains Mono, monospace';
+    ctx.fillText(lbl, ex+8, ey-6);
+  }
+  drawArrow(a1, a2, '#c0392b', 'A');
+  drawArrow(b1, b2, '#1a4a8a', 'B');
+
+  // Angle arc
+  if (Math.abs(a1) > 0.05 || Math.abs(a2) > 0.05) {
+    const angA = Math.atan2(a2, a1);
+    const angB = Math.atan2(b2, b1);
+    ctx.strokeStyle = 'rgba(211,84,0,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 28, -angA, -angB, angA > angB);
+    ctx.stroke();
+    ctx.fillStyle = 'var(--orange)';
+    ctx.font = '11px Fraunces, serif';
+    ctx.fillText('θ', cx+32, cy-10);
+  }
+}
+
+['sl_a1','sl_a2','sl_b1','sl_b2'].forEach(id => {
+  const el = document.getElementById(id);
+  const valId = 'sv_' + id.slice(3);
+  el.addEventListener('input', () => {
+    document.getElementById(valId).textContent = parseFloat(el.value).toFixed(1);
+    drawVectors();
+  });
+});
+drawVectors();
+</script>
+</body>
+</html>

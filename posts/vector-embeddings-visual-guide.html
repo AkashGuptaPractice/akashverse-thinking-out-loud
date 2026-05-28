@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vector Embeddings Explained — A Visual Guide to RAG & Search · Akash Gupta</title>
+<meta name="description" content="From raw text to numbers — a visual, intuition-first guide to how vector embeddings power RAG, semantic search, and AI retrieval.">
+<meta name="author" content="Akash Gupta">
+<meta property="og:title" content="Vector Embeddings Explained: A Visual Guide to RAG & Search">
+<meta property="og:description" content="From raw text to numbers — the engine behind RAG, semantic search, and AI retrieval.">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --card: #1a2236;
+    --accent: #00e5ff;
+    --accent2: #ff6b6b;
+    --accent3: #a78bfa;
+    --accent4: #34d399;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --border: rgba(255,255,255,0.07);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 80px 20px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+    font-weight: 300;
+  }
+
+  /* SECTIONS */
+  .section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .section h2 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    letter-spacing: -0.02em;
+  }
+  .section p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+    font-weight: 300;
+  }
+
+  /* DIVIDER */
+  .divider {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* STEP 1: Text → Numbers */
+  .word-to-vec {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 30px 0;
+  }
+  .word-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+  }
+  .word-chip::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,229,255,0.06), transparent);
+  }
+  .arrow-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .arrow-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .arrow {
+    font-size: 1.5rem;
+    color: var(--accent);
+    animation: pulse-arrow 2s infinite;
+  }
+  @keyframes pulse-arrow {
+    0%,100% { opacity: 1; transform: translateX(0); }
+    50% { opacity: 0.5; transform: translateX(4px); }
+  }
+  .vector-display {
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    max-width: 260px;
+  }
+  .vector-display .label {
+    color: var(--muted);
+    font-size: 0.65rem;
+    margin-bottom: 6px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* EMBEDDING MODEL BOX */
+  .model-box {
+    background: linear-gradient(135deg, #1a2236, #0f172a);
+    border: 1px solid var(--accent3);
+    border-radius: 16px;
+    padding: 28px;
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .model-title {
+    font-family: 'Space Mono', monospace;
+    color: var(--accent3);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .layers-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .layer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .layer-nodes {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .node {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid;
+    animation: node-glow 3s infinite;
+  }
+  .node.input { border-color: var(--accent4); background: rgba(52,211,153,0.15); animation-delay: 0s; }
+  .node.hidden1 { border-color: var(--accent); background: rgba(0,229,255,0.12); animation-delay: 0.2s; }
+  .node.hidden2 { border-color: var(--accent3); background: rgba(167,139,250,0.12); animation-delay: 0.4s; }
+  .node.output { border-color: var(--accent2); background: rgba(255,107,107,0.15); animation-delay: 0.6s; }
+  @keyframes node-glow {
+    0%,100% { box-shadow: 0 0 0 0 transparent; }
+    50% { box-shadow: 0 0 8px 2px rgba(0,229,255,0.3); }
+  }
+  .layer-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-align: center;
+  }
+  .conn-arrow {
+    color: var(--muted);
+    font-size: 1.1rem;
+    margin-top: -18px;
+  }
+  .model-desc {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #64748b;
+    font-style: italic;
+  }
+
+  /* SIMILARITY DIAGRAM */
+  .similarity-container {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 30px;
+    margin: 20px 0;
+    height: 320px;
+    overflow: hidden;
+  }
+  .grid-lines {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .axis {
+    position: absolute;
+    background: rgba(255,255,255,0.1);
+  }
+  .axis.x { bottom: 50px; left: 40px; right: 20px; height: 1px; }
+  .axis.y { left: 40px; top: 20px; bottom: 50px; width: 1px; }
+  .axis-label {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+  .dot {
+    position: absolute;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: default;
+    transition: transform 0.3s;
+    border: 2px solid;
+  }
+  .dot:hover { transform: scale(1.2); }
+  .dot .dot-label {
+    position: absolute;
+    top: 42px;
+    white-space: nowrap;
+    font-size: 0.6rem;
+    font-family: 'Space Mono', monospace;
+  }
+  /* cluster: animals */
+  .d1 { bottom: 180px; left: 100px; background: rgba(52,211,153,0.15); border-color: var(--accent4); color: var(--accent4); }
+  .d2 { bottom: 160px; left: 145px; background: rgba(52,211,153,0.15); border-color: var(--accent4); color: var(--accent4); }
+  .d3 { bottom: 200px; left: 125px; background: rgba(52,211,153,0.15); border-color: var(--accent4); color: var(--accent4); }
+  /* cluster: tech */
+  .d4 { bottom: 80px; left: 290px; background: rgba(0,229,255,0.1); border-color: var(--accent); color: var(--accent); }
+  .d5 { bottom: 100px; left: 335px; background: rgba(0,229,255,0.1); border-color: var(--accent); color: var(--accent); }
+  .d6 { bottom: 65px; left: 315px; background: rgba(0,229,255,0.1); border-color: var(--accent); color: var(--accent); }
+  /* cluster: food */
+  .d7 { bottom: 230px; left: 400px; background: rgba(255,107,107,0.1); border-color: var(--accent2); color: var(--accent2); }
+  .d8 { bottom: 210px; left: 445px; background: rgba(255,107,107,0.1); border-color: var(--accent2); color: var(--accent2); }
+  .d9 { bottom: 250px; left: 425px; background: rgba(255,107,107,0.1); border-color: var(--accent2); color: var(--accent2); }
+  .cluster-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px dashed;
+    pointer-events: none;
+  }
+  .ring-animals { width: 90px; height: 80px; bottom: 150px; left: 88px; border-color: rgba(52,211,153,0.3); }
+  .ring-tech    { width: 90px; height: 80px; bottom: 52px; left: 278px; border-color: rgba(0,229,255,0.3); }
+  .ring-food    { width: 90px; height: 80px; bottom: 198px; left: 390px; border-color: rgba(255,107,107,0.3); }
+  .cluster-text {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  .ct-animals { bottom: 140px; left: 88px; color: var(--accent4); }
+  .ct-tech    { bottom: 42px; left: 278px; color: var(--accent); }
+  .ct-food    { bottom: 188px; left: 393px; color: var(--accent2); }
+
+  /* RAG PIPELINE */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 24px 0;
+  }
+  .pipe-step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    position: relative;
+    padding-bottom: 28px;
+  }
+  .pipe-step::before {
+    content: '';
+    position: absolute;
+    left: 21px;
+    top: 42px;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent3), transparent);
+  }
+  .pipe-step:last-child::before { display: none; }
+  .step-num {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    border: 2px solid;
+  }
+  .sn1 { border-color: var(--accent4); color: var(--accent4); background: rgba(52,211,153,0.1); }
+  .sn2 { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.1); }
+  .sn3 { border-color: var(--accent3); color: var(--accent3); background: rgba(167,139,250,0.1); }
+  .sn4 { border-color: var(--accent2); color: var(--accent2); background: rgba(255,107,107,0.1); }
+  .sn5 { border-color: #fbbf24; color: #fbbf24; background: rgba(251,191,36,0.1); }
+  .step-content { flex: 1; }
+  .step-content h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .step-content p {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 0;
+  }
+  .step-tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 6px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .tag-green { background: rgba(52,211,153,0.15); color: var(--accent4); }
+  .tag-blue  { background: rgba(0,229,255,0.12); color: var(--accent); }
+  .tag-purple{ background: rgba(167,139,250,0.12); color: var(--accent3); }
+  .tag-red   { background: rgba(255,107,107,0.12); color: var(--accent2); }
+  .tag-yellow{ background: rgba(251,191,36,0.12); color: #fbbf24; }
+
+  /* ANALOGY CARDS */
+  .analogy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .analogy-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    transition: border-color 0.3s;
+  }
+  .analogy-card:hover { border-color: var(--accent3); }
+  .analogy-icon { font-size: 1.8rem; margin-bottom: 10px; }
+  .analogy-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+  .analogy-card p { font-size: 0.8rem; color: #64748b; margin-bottom: 0; }
+
+  /* FOOTER NOTE */
+  .footer-note {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .word-to-vec { gap: 10px; }
+    .similarity-container { height: 260px; }
+    .d7,.d8,.d9 { display: none; }
+    .ring-food,.ct-food { display: none; }
+  }
+</style>
+</head>
+<body>
+<a href="../index.html" style="position:fixed;top:16px;left:16px;z-index:1000;font-family:'Space Mono',monospace;font-size:11px;text-decoration:none;color:#e8eaf6;background:#1a2236;border:1px solid #2d3856;padding:6px 10px;border-radius:4px;letter-spacing:0.05em;">← akashgupta.dev</a>
+
+<!-- HERO -->
+<div class="hero">
+  <p class="section-label">Visual Guide</p>
+  <h1>How Vector Embeddings Work</h1>
+  <p>From raw text to numbers — the engine behind RAG, semantic search, and AI retrieval</p>
+</div>
+
+<!-- SECTION 1: THE CORE IDEA -->
+<div class="section">
+  <p class="section-label">Step 01 — The Core Idea</p>
+  <h2>Words become numbers</h2>
+  <p>An embedding model reads a word or sentence and outputs a list of numbers called a <strong style="color:var(--accent)">vector</strong>. These numbers capture meaning — not spelling. Similar meanings → similar numbers.</p>
+
+  <div class="word-to-vec">
+    <div class="word-chip">🐕 &nbsp;"dog"</div>
+    <div class="arrow-block">
+      <div class="arrow-label">embedding<br>model</div>
+      <div class="arrow">→</div>
+    </div>
+    <div class="vector-display">
+      <div class="label">768-dim vector</div>
+      [0.21, -0.84, 0.37, 0.09,<br>
+      &nbsp;0.55, -0.12, 0.73, ...]
+    </div>
+  </div>
+
+  <div class="word-to-vec">
+    <div class="word-chip">🐈 &nbsp;"cat"</div>
+    <div class="arrow-block">
+      <div class="arrow-label">embedding<br>model</div>
+      <div class="arrow">→</div>
+    </div>
+    <div class="vector-display">
+      <div class="label">768-dim vector (SIMILAR!)</div>
+      [0.19, -0.81, 0.34, 0.11,<br>
+      &nbsp;0.52, -0.09, 0.70, ...]
+    </div>
+  </div>
+
+  <div class="word-to-vec">
+    <div class="word-chip">💻 &nbsp;"laptop"</div>
+    <div class="arrow-block">
+      <div class="arrow-label">embedding<br>model</div>
+      <div class="arrow">→</div>
+    </div>
+    <div class="vector-display">
+      <div class="label">768-dim vector (DIFFERENT)</div>
+      [-0.63, 0.44, -0.27, 0.82,<br>
+      &nbsp;-0.11, 0.66, -0.38, ...]
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECTION 2: THE MODEL ITSELF -->
+<div class="section">
+  <p class="section-label">Step 02 — Inside the Model</p>
+  <h2>What is an embedding model?</h2>
+  <p>It's a <strong style="color:var(--accent3)">neural network</strong> — layers of mathematical functions. Text goes in one end, and a fixed-length list of numbers comes out the other. The model was trained on billions of sentences so it "knows" what words mean.</p>
+
+  <div class="model-box">
+    <div class="model-title">⚙️ Neural Network Architecture</div>
+    <div class="layers-row">
+      <div class="layer">
+        <div class="layer-nodes">
+          <div class="node input"></div>
+          <div class="node input"></div>
+          <div class="node input"></div>
+          <div class="node input"></div>
+          <div class="node input"></div>
+        </div>
+        <div class="layer-label">Input<br>Tokens</div>
+      </div>
+      <div class="conn-arrow">→</div>
+      <div class="layer">
+        <div class="layer-nodes">
+          <div class="node hidden1"></div>
+          <div class="node hidden1"></div>
+          <div class="node hidden1"></div>
+          <div class="node hidden1"></div>
+          <div class="node hidden1"></div>
+          <div class="node hidden1"></div>
+        </div>
+        <div class="layer-label">Hidden<br>Layer 1</div>
+      </div>
+      <div class="conn-arrow">→</div>
+      <div class="layer">
+        <div class="layer-nodes">
+          <div class="node hidden2"></div>
+          <div class="node hidden2"></div>
+          <div class="node hidden2"></div>
+          <div class="node hidden2"></div>
+          <div class="node hidden2"></div>
+          <div class="node hidden2"></div>
+        </div>
+        <div class="layer-label">Hidden<br>Layer 2</div>
+      </div>
+      <div class="conn-arrow">→</div>
+      <div class="layer">
+        <div class="layer-nodes">
+          <div class="node hidden1"></div>
+          <div class="node hidden1"></div>
+          <div class="node hidden1"></div>
+          <div class="node hidden1"></div>
+        </div>
+        <div class="layer-label">Attention<br>Layer</div>
+      </div>
+      <div class="conn-arrow">→</div>
+      <div class="layer">
+        <div class="layer-nodes">
+          <div class="node output"></div>
+          <div class="node output"></div>
+          <div class="node output"></div>
+        </div>
+        <div class="layer-label">Output<br>Vector</div>
+      </div>
+    </div>
+    <div class="model-desc">"dog" → tokens → through layers → [0.21, -0.84, 0.37 ...]</div>
+  </div>
+
+  <div class="analogy-grid">
+    <div class="analogy-card">
+      <div class="analogy-icon">📚</div>
+      <h4>Library Bookshelf</h4>
+      <p>Similar books (topics) sit near each other. The embedding model arranges words the same way in number-space.</p>
+    </div>
+    <div class="analogy-card">
+      <div class="analogy-icon">🗺️</div>
+      <h4>GPS Coordinates</h4>
+      <p>Just like coordinates place you on a map, a vector places a word in "meaning space." Nearby coordinates = nearby meaning.</p>
+    </div>
+    <div class="analogy-card">
+      <div class="analogy-icon">🎨</div>
+      <h4>Color as Numbers</h4>
+      <p>Red = (255, 0, 0). Blue = (0, 0, 255). Words get their own "color codes" that represent their meaning.</p>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECTION 3: VECTOR SPACE / SIMILARITY -->
+<div class="section">
+  <p class="section-label">Step 03 — Vector Space</p>
+  <h2>Similar words cluster together</h2>
+  <p>Once everything is a vector, the model can measure distance between them. Words with similar meaning land close together in this space. This is what makes search work — your query lands near relevant documents.</p>
+
+  <div class="similarity-container">
+    <div class="grid-lines"></div>
+    <div class="axis x"></div>
+    <div class="axis y"></div>
+    <div class="axis-label" style="bottom:35px;left:50%;transform:translateX(-50%)">Dimension 1 →</div>
+    <div class="axis-label" style="left:8px;top:50%;transform:translateY(-50%) rotate(-90deg)">Dimension 2 →</div>
+
+    <!-- Animals cluster -->
+    <div class="cluster-ring ring-animals"></div>
+    <div class="dot d1">🐕<span class="dot-label">dog</span></div>
+    <div class="dot d2">🐈<span class="dot-label">cat</span></div>
+    <div class="dot d3">🐇<span class="dot-label">rabbit</span></div>
+    <div class="cluster-text ct-animals">Animals</div>
+
+    <!-- Tech cluster -->
+    <div class="cluster-ring ring-tech"></div>
+    <div class="dot d4">💻<span class="dot-label">laptop</span></div>
+    <div class="dot d5">📱<span class="dot-label">phone</span></div>
+    <div class="dot d6">⌨️<span class="dot-label">keyboard</span></div>
+    <div class="cluster-text ct-tech">Technology</div>
+
+    <!-- Food cluster -->
+    <div class="cluster-ring ring-food"></div>
+    <div class="dot d7">🍕<span class="dot-label">pizza</span></div>
+    <div class="dot d8">🍔<span class="dot-label">burger</span></div>
+    <div class="dot d9">🍜<span class="dot-label">noodles</span></div>
+    <div class="cluster-text ct-food">Food</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECTION 4: FULL RAG PIPELINE -->
+<div class="section">
+  <p class="section-label">Step 04 — The Full RAG Pipeline</p>
+  <h2>How it all connects</h2>
+  <p>This is the complete flow from user query to answer — the exact system you were reading about in those retrieval logs.</p>
+
+  <div class="pipeline">
+    <div class="pipe-step">
+      <div class="step-num sn1">1</div>
+      <div class="step-content">
+        <h3>User types a query</h3>
+        <p>"What are the symptoms of diabetes?"</p>
+        <span class="step-tag tag-green">Input</span>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="step-num sn2">2</div>
+      <div class="step-content">
+        <h3>Query → Embedding Model</h3>
+        <p>The query is sent to an embedding model (like OpenAI's text-embedding-ada or BERT). It outputs a vector like <code style="color:var(--accent);font-size:0.75rem">[0.12, -0.55, 0.89, ...]</code></p>
+        <span class="step-tag tag-blue">Embedding</span>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="step-num sn3">3</div>
+      <div class="step-content">
+        <h3>Search the Vector Database</h3>
+        <p>The vector is compared to millions of pre-stored document vectors. The closest ones (by cosine similarity or dot product) are returned as the most relevant chunks.</p>
+        <span class="step-tag tag-purple">Vector DB (Pinecone, Weaviate, pgvector…)</span>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="step-num sn4">4</div>
+      <div class="step-content">
+        <h3>Retrieved chunks → LLM context</h3>
+        <p>The top-k relevant documents are stuffed into the LLM's prompt as context, along with the original question.</p>
+        <span class="step-tag tag-red">Context Injection</span>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="step-num sn5">5</div>
+      <div class="step-content">
+        <h3>LLM generates the answer</h3>
+        <p>The language model (like Claude or GPT) reads the retrieved context and generates a grounded, accurate answer.</p>
+        <span class="step-tag tag-yellow">Final Answer</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECTION 5: HOW THEY'RE TRAINED -->
+<div class="section">
+  <p class="section-label">Step 05 — How They're Built</p>
+  <h2>How do people train embedding models?</h2>
+  <p>The model learns from massive datasets of text. It's trained using a technique where it tries to predict: <em>"these two sentences are similar"</em> vs <em>"these two are unrelated."</em> Over millions of examples, it learns to map meaning into number-space.</p>
+
+  <div class="analogy-grid">
+    <div class="analogy-card">
+      <div class="analogy-icon">🏋️</div>
+      <h4>Contrastive Learning</h4>
+      <p>Train on pairs: "a dog barked" and "the puppy made noise" → SIMILAR. "a dog barked" and "stock prices rose" → DIFFERENT. Model adjusts numbers until similar pairs are close.</p>
+    </div>
+    <div class="analogy-card">
+      <div class="analogy-icon">🧠</div>
+      <h4>Pre-trained on Billions of Docs</h4>
+      <p>Models like BERT read Wikipedia, books, websites. They learn context: words near each other tend to be related — this is called "self-supervised" learning.</p>
+    </div>
+    <div class="analogy-card">
+      <div class="analogy-icon">🎯</div>
+      <h4>Fine-tuned for Retrieval</h4>
+      <p>General models are then fine-tuned on question-answer pairs to make them great specifically at matching questions to relevant documents.</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">
+  vector embeddings · semantic search · rag pipelines · built for you
+</div>
+
+</body>
+</html>
