@@ -130,7 +130,7 @@ a:hover { text-decoration: underline; }
 
 .avatar-wrap {
   position: relative;
-  width: 130px; height: 130px;
+  width: 170px; height: 130px;
   margin: 0 auto 1.5rem;
   display: grid;
   place-items: center;
@@ -157,31 +157,20 @@ a:hover { text-decoration: underline; }
 }
 
 .avatar {
-  width: 110px; height: 110px;
-  border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2) 55%, var(--accent-3));
-  color: white;
-  font-weight: 700;
-  font-size: 2rem;
-  display: flex; align-items: center; justify-content: center;
-  letter-spacing: 0.05em;
-  box-shadow:
-    0 0 0 4px color-mix(in oklab, var(--accent) 10%, transparent),
-    0 14px 50px -10px color-mix(in oklab, var(--accent-2) 45%, transparent);
-  animation: morphBlob 14s ease-in-out infinite, float 6s ease-in-out infinite;
-  transition: box-shadow 0.3s ease;
+  width: 150px; height: 105px;
+  display: block;
+  filter:
+    drop-shadow(0 14px 30px color-mix(in oklab, var(--accent-2) 45%, transparent))
+    drop-shadow(0 4px 8px color-mix(in oklab, var(--accent) 30%, transparent));
+  animation: float 6s ease-in-out infinite;
   transform-style: preserve-3d;
-  will-change: border-radius, transform;
+  will-change: transform;
+  transition: filter 0.3s ease;
 }
 .avatar:hover {
-  box-shadow:
-    0 0 0 6px color-mix(in oklab, var(--accent) 15%, transparent),
-    0 18px 60px -10px color-mix(in oklab, var(--accent-2) 55%, transparent);
-}
-@keyframes morphBlob {
-  0%, 100% { border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%; }
-  33%      { border-radius: 40% 60% 70% 30% / 45% 55% 45% 55%; }
-  66%      { border-radius: 55% 45% 33% 67% / 60% 40% 60% 40%; }
+  filter:
+    drop-shadow(0 18px 38px color-mix(in oklab, var(--accent-2) 55%, transparent))
+    drop-shadow(0 6px 12px color-mix(in oklab, var(--accent) 40%, transparent));
 }
 @keyframes float {
   0%, 100% { transform: translateY(0); }

@@ -33,7 +33,7 @@
         <span class="kchip k-purple d2" style="top:18%; right:6%">Q·Kᵀ ⁄ √dₖ</span>
         <span class="kchip k-green d3"  style="top:63%; left:5%">cos(θ) = a·b ⁄ ‖a‖‖b‖</span>
         <span class="kchip k-blue d4"   style="top:73%; right:7%">∇L(θ) = ∂L/∂θ</span>
-        <span class="kchip k-purple d3" style="top:40%; left:4%">P(w | context)</span>
+        <span class="kchip k-purple d3" style="top:91%; left:30%">P(w | context)</span>
         <span class="kchip k-green d1"  style="top:85%; right:18%">σ(z) = 1 ⁄ (1+e⁻ᶻ)</span>
 
         <!-- Concept tags (AI/ML) -->
@@ -140,19 +140,15 @@
           </g>
         </svg>
 
-        <!-- Centre column: ghost chips drifting behind the avatar and text -->
-        <span class="kchip ghost k-blue d3"   style="top:7%;  left:40%">y = Wx + b</span>
-        <span class="kchip ghost k-purple d1" style="top:11%; left:55%">ReLU(x) = max(0, x)</span>
-        <span class="kchip ghost k-green d4"  style="top:21%; left:36%">LayerNorm</span>
-        <span class="kchip ghost k-blue d2"   style="top:24%; left:58%">KV cache</span>
-        <span class="kchip ghost k-purple d3" style="top:36%; left:38%">dropout p=0.1</span>
-        <span class="kchip ghost k-green d1"  style="top:42%; left:56%">BPE tokens</span>
-        <span class="kchip ghost k-blue d4"   style="top:50%; left:42%">H(p, q) = −Σ pᵢ log qᵢ</span>
-        <span class="kchip ghost k-purple d2" style="top:58%; left:54%">argmax</span>
-        <span class="kchip ghost k-green d3"  style="top:66%; left:38%">Adam β₁=0.9</span>
-        <span class="kchip ghost k-blue d1"   style="top:72%; left:58%">RMSNorm</span>
-        <span class="kchip ghost k-purple d4" style="top:82%; left:40%">temperature τ</span>
-        <span class="kchip ghost k-green d2"  style="top:88%; left:55%">top-k sampling</span>
+        <!-- Centre column ghosts: placed only in genuine empty bands
+             (narrow strip above the availability pill, and the empty
+             zone below the links row). Never on text or architectures. -->
+        <span class="kchip ghost k-blue d3"   style="top:31%; left:36%">y = Wx + b</span>
+        <span class="kchip ghost k-purple d1" style="top:33%; left:56%">ReLU(x) = max(0, x)</span>
+        <span class="kchip ghost k-green d4"  style="top:82%; left:32%">Adam β₁=0.9</span>
+        <span class="kchip ghost k-blue d2"   style="top:84%; left:58%">temperature τ</span>
+        <span class="kchip ghost k-purple d3" style="top:92%; left:42%">top-k sampling</span>
+        <span class="kchip ghost k-green d1"  style="top:94%; left:60%">RMSNorm</span>
       </div>
     </div>
     <nav class="nav">
@@ -167,7 +163,31 @@
     </nav>
 
     <div class="hero-inner">
-      <div class="avatar-wrap"><div class="avatar">AG</div></div>
+      <div class="avatar-wrap">
+        <svg class="avatar" viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" aria-label="AG">
+          <defs>
+            <linearGradient id="cloudGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%"   stop-color="#7aa2ff"/>
+              <stop offset="55%"  stop-color="#b78aff"/>
+              <stop offset="100%" stop-color="#5fe3a1"/>
+            </linearGradient>
+          </defs>
+          <!-- Cloud silhouette: scalloped/zigzag top edge, soft bottom -->
+          <path d="M30 110
+                   C 8 110, 4 80, 28 72
+                   C 18 50, 48 32, 64 50
+                   C 68 22, 110 18, 122 46
+                   C 142 32, 178 52, 162 78
+                   C 190 86, 176 118, 150 110
+                   C 142 128, 100 132, 92 116
+                   C 80 130, 46 128, 30 110 Z"
+                fill="url(#cloudGrad)"/>
+          <text x="100" y="92" text-anchor="middle"
+                font-size="44" font-weight="700" fill="#ffffff"
+                font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif"
+                letter-spacing="2">AG</text>
+        </svg>
+      </div>
       <div class="meta-row">
         <span class="availability"><span class="dot"></span> Open to interesting conversations</span>
         <span class="location-pill">
