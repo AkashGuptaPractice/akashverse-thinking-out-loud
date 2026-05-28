@@ -50,6 +50,8 @@ a:hover { text-decoration: underline; }
   padding-bottom: 4rem;
   overflow: hidden;
   isolation: isolate;
+  --mx: 0;
+  --my: 0;
 }
 .hero::before,
 .hero::after {
@@ -64,11 +66,14 @@ a:hover { text-decoration: underline; }
   filter: blur(20px);
   z-index: -1;
   animation: drift 18s ease-in-out infinite alternate;
+  transform: translate3d(calc(var(--mx) * 20px), calc(var(--my) * 20px), 0);
+  transition: transform 0.4s ease-out;
 }
 .hero::after {
   animation-duration: 24s;
   animation-direction: alternate-reverse;
   opacity: 0.55;
+  transform: translate3d(calc(var(--mx) * -30px), calc(var(--my) * -30px), 0);
 }
 
 @keyframes drift {
@@ -110,6 +115,33 @@ a:hover { text-decoration: underline; }
   text-align: center;
 }
 
+.avatar-wrap {
+  position: relative;
+  width: 120px; height: 120px;
+  margin: 0 auto 1.5rem;
+  display: grid;
+  place-items: center;
+  perspective: 600px;
+}
+.avatar-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 2px;
+  background: conic-gradient(from 0deg,
+    var(--accent), var(--accent-2), var(--accent-3),
+    var(--accent), var(--accent-2), var(--accent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: spin 8s linear infinite;
+  filter: blur(0.4px);
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .avatar {
   width: 96px; height: 96px;
   border-radius: 50%;
@@ -118,16 +150,16 @@ a:hover { text-decoration: underline; }
   font-weight: 700;
   font-size: 2rem;
   display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 1.5rem;
   letter-spacing: 0.05em;
   box-shadow:
     0 0 0 6px rgba(122,162,255,0.08),
     0 10px 40px -10px rgba(122,162,255,0.45);
   animation: float 6s ease-in-out infinite;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.2s ease-out, box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 .avatar:hover {
-  transform: scale(1.05);
   box-shadow:
     0 0 0 8px rgba(122,162,255,0.12),
     0 14px 50px -10px rgba(183,138,255,0.55);
@@ -402,4 +434,95 @@ footer {
   .nav { justify-content: center; gap: 1rem; padding: 1rem; }
   .section { padding: 2.5rem 0; }
   .post-card { padding: 1.2rem 1.25rem; }
+}
+
+/* ── 3D tilt prep (cards + journey items) ── */
+.post-card,
+.timeline li {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.posts, .timeline { perspective: 1200px; }
+
+/* ── Location pill ── */
+.meta-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+.location-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: color-mix(in oklab, var(--panel) 80%, transparent);
+  backdrop-filter: blur(8px);
+}
+.location-pill svg { width: 12px; height: 12px; }
+
+/* ── SVG icons inside link pills ── */
+.links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.links a svg {
+  width: 16px; height: 16px;
+  opacity: 0.9;
+}
+
+/* ── Contact cards (replaces flat list) ── */
+.contact-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.contact-cards li {
+  margin: 0;
+}
+.contact-cards a {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.95rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.contact-cards a:hover {
+  text-decoration: none;
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -12px color-mix(in oklab, var(--accent) 50%, transparent);
+}
+.contact-cards .icon {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border-radius: 9px;
+  background: var(--panel-2);
+  flex-shrink: 0;
+}
+.contact-cards .icon svg { width: 18px; height: 18px; }
+.contact-cards .label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+}
+.contact-cards .value {
+  font-size: 0.95rem;
+  color: var(--text);
+  word-break: break-word;
 }
