@@ -130,7 +130,7 @@ a:hover { text-decoration: underline; }
 
 .avatar-wrap {
   position: relative;
-  width: 120px; height: 120px;
+  width: 130px; height: 130px;
   margin: 0 auto 1.5rem;
   display: grid;
   place-items: center;
@@ -139,43 +139,49 @@ a:hover { text-decoration: underline; }
 .avatar-wrap::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  padding: 2px;
+  inset: -14px;
   background: conic-gradient(from 0deg,
-    var(--accent), var(--accent-2), var(--accent-3),
-    var(--accent), var(--accent-2), var(--accent));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  animation: spin 8s linear infinite;
-  filter: blur(0.4px);
+    color-mix(in oklab, var(--accent) 70%, transparent),
+    color-mix(in oklab, var(--accent-2) 70%, transparent),
+    color-mix(in oklab, var(--accent-3) 70%, transparent),
+    color-mix(in oklab, var(--accent) 70%, transparent));
+  border-radius: 58% 42% 48% 52% / 50% 55% 45% 50%;
+  filter: blur(18px);
+  opacity: 0.55;
+  z-index: -1;
+  animation: morphHalo 16s ease-in-out infinite;
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes morphHalo {
+  0%, 100% { border-radius: 58% 42% 48% 52% / 50% 55% 45% 50%; transform: rotate(0deg); }
+  50%      { border-radius: 45% 55% 60% 40% / 55% 45% 50% 50%; transform: rotate(8deg); }
 }
 
 .avatar {
-  width: 96px; height: 96px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  width: 110px; height: 110px;
+  border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2) 55%, var(--accent-3));
   color: white;
   font-weight: 700;
   font-size: 2rem;
   display: flex; align-items: center; justify-content: center;
   letter-spacing: 0.05em;
   box-shadow:
-    0 0 0 6px rgba(122,162,255,0.08),
-    0 10px 40px -10px rgba(122,162,255,0.45);
-  animation: float 6s ease-in-out infinite;
-  transition: transform 0.2s ease-out, box-shadow 0.3s ease;
+    0 0 0 4px color-mix(in oklab, var(--accent) 10%, transparent),
+    0 14px 50px -10px color-mix(in oklab, var(--accent-2) 45%, transparent);
+  animation: morphBlob 14s ease-in-out infinite, float 6s ease-in-out infinite;
+  transition: box-shadow 0.3s ease;
   transform-style: preserve-3d;
-  will-change: transform;
+  will-change: border-radius, transform;
 }
 .avatar:hover {
   box-shadow:
-    0 0 0 8px rgba(122,162,255,0.12),
-    0 14px 50px -10px rgba(183,138,255,0.55);
+    0 0 0 6px color-mix(in oklab, var(--accent) 15%, transparent),
+    0 18px 60px -10px color-mix(in oklab, var(--accent-2) 55%, transparent);
+}
+@keyframes morphBlob {
+  0%, 100% { border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%; }
+  33%      { border-radius: 40% 60% 70% 30% / 45% 55% 45% 55%; }
+  66%      { border-radius: 55% 45% 33% 67% / 60% 40% 60% 40%; }
 }
 @keyframes float {
   0%, 100% { transform: translateY(0); }
@@ -635,6 +641,22 @@ footer {
 .k-purple { color: var(--accent-2); }
 .k-green  { color: var(--accent-3); }
 
+/* "Ghost" chip — no background or border, just glowing text. Designed to sit
+   behind hero text and the avatar so the field fills the whole header. */
+.kchip.ghost {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  padding: 0.05rem 0.2rem;
+  font-size: 0.7rem;
+  opacity: 0.45;
+  text-shadow:
+    0 0 10px color-mix(in oklab, currentColor 70%, transparent),
+    0 0 22px color-mix(in oklab, currentColor 35%, transparent);
+}
+
 .kdiagram {
   position: absolute;
   width: 64px;
@@ -642,6 +664,17 @@ footer {
   opacity: 0.75;
   filter: drop-shadow(0 0 10px color-mix(in oklab, currentColor 35%, transparent));
   will-change: transform, opacity;
+}
+
+/* Larger transparent blueprint architectures */
+.karch {
+  position: absolute;
+  width: 130px;
+  height: auto;
+  opacity: 0.32;
+  filter: drop-shadow(0 0 14px color-mix(in oklab, currentColor 25%, transparent));
+  will-change: transform, opacity;
+  pointer-events: none;
 }
 
 .d1 { animation: drift1 19s ease-in-out infinite; }
@@ -668,12 +701,14 @@ footer {
 
 /* On narrower screens hide the dense layer so it doesn't crowd the centred text. */
 @media (max-width: 1024px) {
-  .knowledge-field .kchip:nth-of-type(n+8),
-  .knowledge-field .kdiagram:nth-of-type(n+2) { display: none; }
+  .knowledge-field .kchip:not(.ghost):nth-of-type(n+8),
+  .knowledge-field .kdiagram:nth-of-type(n+2),
+  .knowledge-field .karch { display: none; }
+  .knowledge-field .kchip.ghost { opacity: 0.3; font-size: 0.62rem; }
 }
 @media (max-width: 720px) {
   .knowledge-field { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .grid-floor, .kchip, .kdiagram { animation: none !important; }
+  .grid-floor, .kchip, .kdiagram, .karch { animation: none !important; }
 }
