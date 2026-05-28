@@ -27,10 +27,56 @@
   <header class="hero">
     <div class="scene-3d" aria-hidden="true">
       <div class="grid-floor"></div>
-      <span class="shape3d cube"></span>
-      <span class="shape3d ring"></span>
-      <span class="shape3d dots"></span>
-      <span class="shape3d bar"></span>
+      <div class="knowledge-field">
+        <!-- Math / ML formulas -->
+        <span class="kchip k-blue d1"   style="top:11%; left:5%">softmax(xᵢ) = eˣⁱ ⁄ Σeˣʲ</span>
+        <span class="kchip k-purple d2" style="top:18%; right:6%">Q·Kᵀ ⁄ √dₖ</span>
+        <span class="kchip k-green d3"  style="top:63%; left:5%">cos(θ) = a·b ⁄ ‖a‖‖b‖</span>
+        <span class="kchip k-blue d4"   style="top:73%; right:7%">∇L(θ) = ∂L/∂θ</span>
+        <span class="kchip k-purple d3" style="top:40%; left:4%">P(w | context)</span>
+        <span class="kchip k-green d1"  style="top:85%; right:18%">σ(z) = 1 ⁄ (1+e⁻ᶻ)</span>
+
+        <!-- Concept tags (AI/ML) -->
+        <span class="kchip k-purple solid d2" style="top:8%;  right:22%">Attention</span>
+        <span class="kchip k-blue solid d3"   style="top:22%; left:20%">RAG</span>
+        <span class="kchip k-green solid d4"  style="top:33%; right:20%">Embeddings</span>
+        <span class="kchip k-purple solid d1" style="top:52%; right:4%">Transformer</span>
+        <span class="kchip k-blue solid d4"   style="top:78%; left:22%">Backprop</span>
+        <span class="kchip k-green solid d2"  style="top:48%; left:18%">LLM</span>
+
+        <!-- Security / Platform concepts -->
+        <span class="kchip k-blue solid d2"   style="top:5%;  left:24%">OAuth 2.0</span>
+        <span class="kchip k-purple solid d4" style="top:14%; left:42%">SAML</span>
+        <span class="kchip k-green solid d1"  style="top:88%; left:6%">JWT</span>
+        <span class="kchip k-blue solid d3"   style="top:90%; right:8%">mTLS</span>
+        <span class="kchip k-purple solid d2" style="top:60%; right:22%">OIDC</span>
+        <span class="kchip k-green solid d4"  style="top:28%; right:38%">Kafka</span>
+
+        <!-- Mini SVG diagrams -->
+        <svg class="kdiagram k-purple d3" style="top:42%; right:10%" viewBox="0 0 70 36" aria-hidden="true">
+          <rect x="2"  y="8" width="22" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <rect x="46" y="8" width="22" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <line x1="24" y1="18" x2="44" y2="18" stroke="currentColor" stroke-width="1.3"/>
+          <polygon points="41,15 46,18 41,21" fill="currentColor"/>
+          <text x="13" y="21" font-size="6" fill="currentColor" text-anchor="middle" font-family="ui-monospace,monospace">enc</text>
+          <text x="57" y="21" font-size="6" fill="currentColor" text-anchor="middle" font-family="ui-monospace,monospace">dec</text>
+        </svg>
+        <svg class="kdiagram k-blue d4" style="top:68%; right:32%" viewBox="0 0 50 50" aria-hidden="true">
+          <line x1="10" y1="10" x2="40" y2="25" stroke="currentColor" stroke-width="1"/>
+          <line x1="10" y1="25" x2="40" y2="25" stroke="currentColor" stroke-width="1"/>
+          <line x1="10" y1="40" x2="40" y2="25" stroke="currentColor" stroke-width="1"/>
+          <line x1="40" y1="25" x2="48" y2="25" stroke="currentColor" stroke-width="1.2"/>
+          <circle cx="10" cy="10" r="3" fill="currentColor"/>
+          <circle cx="10" cy="25" r="3" fill="currentColor"/>
+          <circle cx="10" cy="40" r="3" fill="currentColor"/>
+          <circle cx="40" cy="25" r="3.5" fill="currentColor"/>
+        </svg>
+        <svg class="kdiagram k-green d2" style="top:38%; left:12%" viewBox="0 0 60 40" aria-hidden="true">
+          <line x1="5" y1="32" x2="50" y2="8" stroke="currentColor" stroke-width="1.5"/>
+          <polygon points="46,6 52,8 48,12" fill="currentColor"/>
+          <text x="30" y="36" font-size="6" fill="currentColor" text-anchor="middle" font-family="ui-monospace,monospace">vector</text>
+        </svg>
+      </div>
     </div>
     <nav class="nav">
       <a href="#about">About</a>
@@ -53,7 +99,7 @@
         </span>
       </div>
       <h1>Akash Gupta</h1>
-      <p class="tagline">Software Engineer @ Pegasystems · M.Tech CSE, IIT Bombay</p>
+      <p class="tagline">Software Engineer @ Pegasystems · M.Tech CSE, IIT Jammu</p>
       <p class="sub">Backend / Platform Security · Learning in public.</p>
       <div class="links">
         <a href="https://github.com/AkashGuptaPractice" target="_blank" rel="noopener">
@@ -116,7 +162,7 @@
         </li>
         <li>
           <span class="when">2023 — 2025</span>
-          <h3>M.Tech, Computer Science · IIT Bombay</h3>
+          <h3>M.Tech, Computer Science · IIT Jammu</h3>
           <p>CGPA 8.47. Beyond coursework I served as PG Academic Secretary — the elected voice for the postgrad cohort on academic matters — a Placement Coordinator helping classmates land roles, and a TA for Data Structures &amp; Algorithms and Python. The teaching is what stuck most: you don't really understand something until a first-year asks the obvious question and you realise you don't.</p>
         </li>
         <li>
